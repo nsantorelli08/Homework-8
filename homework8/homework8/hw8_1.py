@@ -1,23 +1,18 @@
 def get_formatted_text(filename):
-    
     '''
     Arguments: 
         filename: string, the name of the file to be read.
     Returns: 
         lines: list, a list of strings, each string is one line in the file.
     '''
-    lines = []
 
+    lines = []
     with open(filename, "r") as f:
         lines = f.readlines()
         lines = ["__" + line.strip().lower() + "__" for line in lines]
-
     return lines
 
-
-
 def get_ngrams(line, n):
-    
     '''
     Arguments: 
         line: string (a line of text), 
@@ -27,17 +22,16 @@ def get_ngrams(line, n):
     Notes: (1) make sure to pad the beginning and end of the string with '_';
            (2) make sure to convert the string to lower-case, so "Hello" should be turned into "__hello__" before processing;
     '''
+
     ngrams = []  # init a list
 
     N = len(line)
     L = n
     for k in range(N - L + 1):
         ngrams.append(line[k : k + L])
-
     return ngrams
 
 def get_dict(filename, n):
-    
     '''
     Arguments: 
         filename: the filename to create an n-gram dictionary for, string
@@ -54,18 +48,22 @@ def get_dict(filename, n):
         (3) you can follow the step 1,2,3 to help you fill the 'get_dict' funtion if you want.
     
     '''
-    # TODO: complete the function
+
     ngram_dict = {}
 
     # 1. get lines and combine them to a set of keys
-    #   fill in
+    lines = get_formatted_text(filename)
+    all_ngrams = []
+
+    for line in lines:
+        all_ngrams.extend(get_ngrams(line, n))
 
     # 2. use the set to initialize a dict
-    #   fill in
+    ngram_dict = dict.fromkeys(set(all_ngrams), 0)
 
     # 3. update the values of the dict
-    #   fill in
-
+    for ngram in all_ngrams:
+        ngram_dict[ngram] += 1
     return ngram_dict
 
 # Arguments:
@@ -78,27 +76,22 @@ def get_dict(filename, n):
 #         sort them by name within the sorted dict.
 #     HINT:   (1) You may find the following StackOverflow post helpful for sorting a dictionary by its values: 
 #              https://stackoverflow.com/questions/613183/how-do-i-sort-a-dictionary-by-value
-def top_N_common(filename, N, n, threshold=0):
-    # TODO: complete the function
-    top_n_grams = None
-    # 1. get a dict
-    # fill in
 
+def top_N_common(filename, N, n, threshold=0):
+    # 1. get a dict
+    ngram_dict = get_dict(filename, n)
+    filtered_dict = {k: v for k, v in ngram_dict.items() if v >= threshold}
     # 2. sort the dict
-    # fill in
+    sorted_items = sorted(filtered_dict.items(), key=lambda x: (-x[1], x[0]))
 
     # 3. get the top N common n-grams from the sorted dict and return it
-    #   fill in
-
+    top_n_grams = dict(sorted_items[:N])
 
     return top_n_grams
 
-
 ########################################## Checkpoint, can test code above before proceeding #################################################
 
-
 def get_all_dicts(filename_list, n):
-    
     '''
     Arguments: 
         filename_list: list (a list of filepaths for the different language text files to process). 
@@ -107,16 +100,14 @@ def get_all_dicts(filename_list, n):
         lang_dicts: list, a list of dictionaries where there is a dictionary for each language file processed. Each dictionary in the list
                 should have keys corresponding to the n-grams, and values corresponding to the count of the n-gram
     '''
-    lang_dicts = []
 
+    lang_dicts = []
     for lang in filename_list:
         langDict = get_dict(lang, n)
         lang_dicts.append(langDict)
-
     return lang_dicts
 
 def dict_union(listOfDicts):
-    
     '''
     Arguments:
         listOfDicts: list, A list of dictionaries where the keys are n-grams and the values are the count of the n-gram
@@ -128,21 +119,20 @@ def dict_union(listOfDicts):
               and you call sorted() on it, that is the output we want
            (4) you can follow the step1,2 to help you fill the 'dict_union' funtion if you want.
     '''
-    # TODO: complete the function
-    union_ngrams = []
+
     # you can firstly initalize an empty set by: "union_ngrams = set()" and later convert it to a list
+    union_ngrams = set()
 
     # 1. update the set by using union_ngrams.update()
-    # fill in
+    for d in listOfDicts:
+        union_ngrams.update(d.keys())
 
     # 2. convert the set into a list and then sort
-    # fill in
+    union_ngrams = sorted(list(union_ngrams))
 
     return union_ngrams
 
-
 def get_all_ngrams(langFiles, n):
-    
     '''
     Arguments: 
         langFiles: list, a list of filepaths for the different language text files to process n. 
@@ -150,11 +140,11 @@ def get_all_ngrams(langFiles, n):
     Returns: 
         all_ngrams: list, a list of all the n-grams across the six languages
     '''
+
     all_ngrams = []
     all_ngrams = dict_union(get_all_dicts(langFiles, n))
 
     return all_ngrams
-
 
 ########################################## Checkpoint, can test code above before proceeding #############################################
 
@@ -172,17 +162,23 @@ def compare_langs(test_file, langFiles, N, n=3):
         (2) consider using the set method 'intersection()'
     Note: when you call top_N_common, you can skip the threshold parameter or set it to 0
     '''
-    # TODO: complete the function
-    lang_match = ''
 
     # 1. get mystery top N using 'top_N_common' function
-    # fill in
+    mystery_top = set(top_N_common(test_file, N, n).keys())
 
     # 2. cardinalities of intersections, use 'intersection()' and 'top_N_common' function
-    # fill in
+    max_intersection = -1
+    lang_match = ''
+
+    for lang_file in langFiles:
+        lang_top = set(top_N_common(lang_file, N, n).keys())
+        intersection_size = len(mystery_top.intersection(lang_top))
+
+        if intersection_size > max_intersection:
+            max_intersection = intersection_size
+            lang_match = lang_file
 
     return lang_match # this variable is a string
-
 
 if __name__ == "__main__":
     from os import listdir
