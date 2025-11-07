@@ -11,7 +11,6 @@ from nltk.corpus import stopwords
 
 # Clean and prepare the contents of a document
 def read_and_clean_doc(doc):
-    
     '''
     Arguments:
         doc: string, the name of the file to be read.
@@ -19,7 +18,7 @@ def read_and_clean_doc(doc):
         all_no_stop: string, a string of all the words in the file, with stopwords removed.
     Notes: Do not append any directory names to doc -- assume we will give you a string representing a file name that will open correctly
     '''     
-    
+
     # 1. Open document, read text into *single* string
     with open(doc, "r") as f:
         allStr = f.read()
@@ -37,10 +36,8 @@ def read_and_clean_doc(doc):
 
     return all_no_stop
 
-
 # Builds a doc-word matrix
 def build_doc_word_matrix(doclist, n, normalize=False):
-    
     '''
     Arguments:
         doclist: list of strings, each string is the name of a file to be read.
@@ -52,21 +49,41 @@ def build_doc_word_matrix(doclist, n, normalize=False):
             Also, Before constructing the doc-word matrix, you should sort the list of ngrams output and construct the doc-word matrix based on the sorted list
         ngramlist: list of strings, the list of ngrams that correspond to the columns in docword
     '''
-    # TODO: complete the function
-    docword, ngramlist = None, None
-    # 1. Create the cleaned string for each doc (use read_and_clean_doc)
 
+    # 1. Create the cleaned string for each doc (use read_and_clean_doc)
+    all_ngrams = []
+    doc_ngrams = []
+
+    for doc in doclist:
+        cleaned = read_and_clean_doc(doc)
+        # Pad the cleaned string
+        padded = "__" + cleaned + "__"
+        # Get ngrams
+        ngrams = get_ngrams(padded, n)
+        doc_ngrams.append(ngrams)
+        all_ngrams.extend(ngrams)
+
+    ngramlist = sorted(list(set(all_ngrams)))
 
     # 2. Create and use ngram lists to build the doc word matrix
+    docword = np.zeros((len(doclist), len(ngramlist)))
 
+    for i, ngrams in enumerate(doc_ngrams):
+        from collections import Counter
+        counts = Counter(ngrams)
+        total = len(ngrams)
 
+        for j, ng in enumerate(ngramlist):
+            count = counts.get(ng, 0)
+            if normalize and total > 0:
+                docword[i, j] = round(count / total, 4)
+            else:
+                docword[i, j] = count
 
     return docword, ngramlist
 
-
 # Builds a term-frequency matrix
 def build_tf_matrix(docword):
-    
     '''
     Arguments:
         docword: 2-dimensional numpy array, the doc-word matrix for the cleaned documents, as returned by build_doc_word_matrix
@@ -74,17 +91,16 @@ def build_tf_matrix(docword):
         tf: 2-dimensional numpy array with the same shape as docword, the term-frequency matrix for the cleaned documents  
     HINTs: You may find np.newaxis helpful
     '''
-    tf = None
-    # TODO: fill in
+    tf = np.zeros_like(docword, dtype=float)
 
-
+    row_sums = docword.sum(axis=1, keepdims=True)
+    row_sums[row_sums == 0] = 1
+    tf = docword / row_sums
     
     return tf
 
-
 # Builds an inverse document frequency matrix
 def build_idf_matrix(docword):
-    
     '''
     Arguments:
         docword: 2-dimensional numpy array, the doc-word matrix for the cleaned documents, as returned by build_doc_word_matrix
@@ -92,33 +108,32 @@ def build_idf_matrix(docword):
         idf: 1-dimensional numpy array, the inverse document frequency matrix for the cleaned documents.
              (should be a 1xW numpy array where W is the number of ngrams in the doc word matrix).
              Don't forget the log factor!
-             
     '''
-    idf = None
-    # TODO: fill in
 
-
+    num_docs = docword.shape[0]
+    doc_presence = (docword > 0).astype(int)
+    doc_freq = doc_presence.sum(axis=0)
+    doc_freq[doc_freq == 0] = 1
+    idf = np.log10(num_docs / doc_freq)
 
     return idf
 
-
 #   Builds a tf-idf matrix given a doc word matrix
 def build_tfidf_matrix(docword):
-    
     '''
     Arguments:
         docword: 2-dimensional numpy array, the doc-word matrix for the cleaned documents, as returned by build_doc_word_matrix
     Returns:
         tfidf: 2-dimensional numpy array with the same shape as docword, the tf-idf matrix for the cleaned documents
     '''
-    tfidf = None
-    #TODO: fill in
-    return tfidf
 
+    tf = build_tf_matrix(docword)
+    idf = build_idf_matrix(docword)
+    tfidf = tf * idf
+    return tfidf
 
 #   Find the three most distinctive ngrams, according to TFIDF, in each document
 def find_distinctive_ngrams(docword, ngramlist, doclist):
-    
     '''
     Arguments:
         docword: 2-dimensional numpy array, the doc-word matrix for the cleaned documents, as returned by build_doc_word_matrix
@@ -127,16 +142,22 @@ def find_distinctive_ngrams(docword, ngramlist, doclist):
     Returns:
         distinctive_words: dictionary, mapping each document name from doclist to an ordered list of the three most unique ngrams in each document
     '''
+
     distinctive_words = {}
     # fill in
     # you might find numpy.argsort helpful for solving this problem:
     # https://docs.scipy.org/doc/numpy/reference/generated/numpy.argsort.html
     # HINT: the smallest three of the negative of docword correspond to largest 3 of docword
 
+    tfidf = build_tfidf_matrix(docword)
 
+    for i, doc in enumerate(doclist):
+        row = tfidf[i, :]
+        top_indices = np.argsort(-row)[:3]
+        top_ngrams = [ngramlist[idx] for idx in top_indices]
+        distinctive_words[doc] = top_ngrams
 
     return distinctive_words
-
 
 if __name__ == "__main__":
     from os import listdir
