@@ -8,7 +8,6 @@ nltk.download("stopwords")
 nltk.download("wordnet")
 from nltk.corpus import stopwords
 
-
 # Clean and prepare the contents of a document
 def read_and_clean_doc(doc):
     '''
@@ -30,8 +29,8 @@ def read_and_clean_doc(doc):
     all_lower = all_rm_punc.lower()
 
     # 4. Filter out stopwords
-    tok_low = all_lower.split(" ")
-    filt_tok = [tok for tok in tok_low if tok not in stopwords.words("english")]
+    tok_low = all_lower.split()
+    filt_tok = [tok for tok in tok_low if tok not in stopwords.words("english") and tok != '']
     all_no_stop = "".join(filt_tok)
 
     return all_no_stop
@@ -185,21 +184,21 @@ if __name__ == "__main__":
     print(wordlist[0:10])
     print(docword[1][0:10])
 
-    # Uncomment the following code block to test build_tf_matrix, builf_idf_matrix, and build_tfidf_matrix
-    # print("\n*** Testing build_tf_matrix ***")
-    # tf = build_tf_matrix(docword)
-    # print(tf[0][0:10])
-    # print(tf[1][0:10])
-    # print(tf.sum(axis=1))
-    # print("\n*** Testing build_idf_matrix ***")
-    # idf = build_idf_matrix(docword)
-    # print(idf[0][0:10])
-    # print("\n*** Testing build_tfidf_matrix ***")
-    # tfidf = build_tfidf_matrix(docword)
-    # print(tfidf.shape)
-    # print(tfidf[0][0:10])
-    # print(tfidf[1][0:10])
+    #Uncomment the following code block to test build_tf_matrix, builf_idf_matrix, and build_tfidf_matrix
+    print("\n*** Testing build_tf_matrix ***")
+    tf = build_tf_matrix(docword)
+    print(tf[0][0:10])
+    print(tf[1][0:10])
+    print(tf.sum(axis=1))
+    print("\n*** Testing build_idf_matrix ***")
+    idf = build_idf_matrix(docword)
+    print(idf[0:10])
+    print("\n*** Testing build_tfidf_matrix ***")
+    tfidf = build_tfidf_matrix(docword)
+    print(tfidf.shape)
+    print(tfidf[0][0:10])
+    print(tfidf[1][0:10])
 
-    # Uncomment the following code block to test find_distinctive_ngrams
-    # print("\n*** Testing find_distinctive_words ***")
-    # print(find_distinctive_ngrams(docword, wordlist, doclist))
+    #Uncomment the following code block to test find_distinctive_ngrams
+    print("\n*** Testing find_distinctive_words ***")
+    print(find_distinctive_ngrams(docword, wordlist, doclist))
