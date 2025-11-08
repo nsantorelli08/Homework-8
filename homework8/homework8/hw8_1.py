@@ -81,11 +81,15 @@ def top_N_common(filename, N, n, threshold=0):
     # 1. get a dict
     ngram_dict = get_dict(filename, n)
     filtered_dict = {k: v for k, v in ngram_dict.items() if v >= threshold}
+
     # 2. sort the dict
     sorted_items = sorted(filtered_dict.items(), key=lambda x: (-x[1], x[0]))
 
     # 3. get the top N common n-grams from the sorted dict and return it
-    top_n_grams = dict(sorted_items[:N])
+    top_n_grams = {}
+    for i in range(min(N, len(sorted_items))):
+        key, value = sorted_items[i]
+        top_n_grams[key] = value
 
     return top_n_grams
 
@@ -178,7 +182,7 @@ def compare_langs(test_file, langFiles, N, n=3):
             max_intersection = intersection_size
             lang_match = lang_file
 
-    return lang_match # this variable is a string
+    return lang_match
 
 if __name__ == "__main__":
     from os import listdir
@@ -193,14 +197,14 @@ if __name__ == "__main__":
     print(top_N_common(path,20,4,threshold=50))
     print("\n")
     # Uncomment the following 6 lines to test dict_union and get_all_ngrams
-    # Compiling ngrams across all 7 languages (mystery is excluded) and finding the most similar language to mystery
-    # path = "ngrams"
-    # file_list = [f for f in listdir(path) if isfile(join(path, f))]
-    # file_list.remove("mystery.txt")
-    # path_list = [join(path, f) for f in file_list]
-    # print(get_all_ngrams(path_list, 4)[:50])  # list of all 4-grams spanning all languages
+    #Compiling ngrams across all 7 languages (mystery is excluded) and finding the most similar language to mystery
+    path = "ngrams"
+    file_list = [f for f in listdir(path) if isfile(join(path, f))]
+    file_list.remove("mystery.txt")
+    path_list = [join(path, f) for f in file_list]
+    print(get_all_ngrams(path_list, 4)[:50])  # list of all 4-grams spanning all languages
 
-    # Find the similarity between languages all the languages and the mystery file
-    # Uncomment the statements below to test compare_langs
-    # test_file = join(path, "mystery.txt")
-    # print(compare_langs(test_file, path_list, 20))  # determine language of mystery file
+    #Find the similarity between languages all the languages and the mystery file
+    #Uncomment the statements below to test compare_langs
+    test_file = join(path, "mystery.txt")
+    print(compare_langs(test_file, path_list, 20))  # determine language of mystery file
